@@ -1,4 +1,3 @@
-```python
 """
 model_utils.py
 --------------
@@ -383,4 +382,4 @@ class IntentPredictor:
             "source": "semantic_model",
             "model_type": self.model_type,
         }
-```
+
