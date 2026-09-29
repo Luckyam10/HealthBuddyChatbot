@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthBuddy — Health Information Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --ink: #14302b;
+    --ink-soft: #4d615d;
+    --line: #dde6e3;
+    --accent: #2f6f62;
+    --accent-soft: #e4efec;
+    --amber: #b9822f;
+    --amber-soft: #f6ecdc;
+    --danger: #b8433d;
+    --danger-soft: #f8e6e4;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(20,48,43,0.04), 0 4px 16px rgba(20,48,43,0.06);
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  ::selection{ background: var(--accent-soft); }
+
+  /* ---------- Header ---------- */
+  header{
+    padding: 22px 28px 0;
+    max-width: 1040px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .brand-row{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .wordmark{
+    font-family:'Fraunces', serif;
+    font-optical-sizing:auto;
+    font-weight:600;
+    font-size: 28px;
+    letter-spacing: -0.01em;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .wordmark .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--accent);
+    display:inline-block;
+    animation: pulse-dot 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse-dot{
+    0%,100%{ transform:scale(1); opacity:1;}
+    50%{ transform:scale(1.5); opacity:0.55;}
+  }
+  .tagline{
+    font-size:13px;
+    color: var(--ink-soft);
+    font-family:'IBM Plex Mono', monospace;
+    letter-spacing: 0.01em;
+  }
+
+  /* pulse strip */
+  .pulse-strip{
+    margin-top:16px;
+    height:34px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border:1px solid var(--line);
+    overflow:hidden;
+    position:relative;
+  }
+  .pulse-strip svg{ width:200%; height:100%; display:block; animation: scroll-pulse 6s linear infinite; }
+  @keyframes scroll-pulse{ from{ transform: translateX(0); } to{ transform: translateX(-50%); } }
+
+  nav.tabs{
+    margin-top:18px;
+    display:inline-flex;
+    background: var(--surface);
+    border:1px solid var(--line);
+    border-radius: 999px;
+    padding:4px;
+    gap:4px;
+  }
+  nav.tabs button{
+    border:none;
+    background:transparent;
+    padding:8px 18px;
+    border-radius:999px;
+    font-family:'Inter', sans-serif;
+    font-weight:500;
+    font-size:14px;
+    color: var(--ink-soft);
+    cursor:pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  nav.tabs button.active{
+    background: var(--ink);
+    color: #fff;
+  }
+
+  main{
+    flex:1;
+    max-width: 1040px;
+    width:100%;
+    margin: 0 auto;
+    padding: 20px 28px 40px;
+  }
+
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  /* ---------- Chat view ---------- */
+  .chat-shell{
+    background: var(--surface);
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display:flex;
+    flex-direction:column;
+    height: 62vh;
+    min-height: 420px;
+  }
+  .messages{
+    flex:1;
+    overflow-y:auto;
+    padding: 22px;
+    display:flex;
+    flex-direction:column;
+    gap: 14px;
+  }
+  .msg-row{ display:flex; }
+  .msg-row.user{ justify-content:flex-end; }
+  .bubble{
+    max-width: 72%;
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 14.5px;
+    line-height:1.5;
+  }
+  .msg-row.user .bubble{
+    background: var(--ink);
+    color:#fff;
+    border-bottom-right-radius: 3px;
+  }
+  .msg-row.bot .bubble{
+    background: var(--accent-soft);
+    color: var(--ink);
+    border-bottom-left-radius: 3px;
+    border-left: 3px solid var(--accent);
+  }
+  .msg-row.bot .bubble.emergency{
+    background: var(--danger-soft);
+    border-left-color: var(--danger);
+  }
+  .msg-row.bot .bubble.fallback{
+    background: #f1f1ee;
+    border-left-color: #9a9a90;
+  }
+  .msg-row.bot .bubble.admin{
+    background: var(--amber-soft);
+    border-left-color: var(--amber);
+  }
+  .vitals{
+    margin-top:7px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .vitals .confbar{
+    width:46px; height:5px; border-radius:3px;
+    background:#dfe6e3;
+    overflow:hidden;
+  }
+  .vitals .confbar span{ display:block; height:100%; background:var(--accent); }
+  .bubble.emergency .vitals .confbar span{ background: var(--danger); }
+  .bubble.fallback .vitals .confbar span{ background:#9a9a90; }
+  .bubble.admin .vitals .confbar span{ background:var(--amber); }
+
+  .chips{
+    padding: 12px 22px;
+    border-top:1px solid var(--line);
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .chip{
+    font-size:12.5px;
+    padding: 6px 12px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:#fff;
+    color: var(--ink-soft);
+    cursor:pointer;
+    font-family:'Inter', sans-serif;
+  }
+  .chip:hover{ border-color: var(--accent); color: var(--accent); }
+
+  .composer{
+    display:flex;
+    gap:10px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--line);
+  }
+  .composer input{
+    flex:1;
+    border:1px solid var(--line);
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-size:14.5px;
+    font-family:'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .composer input:focus{
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .composer button{
+    background: var(--ink);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding: 0 20px;
+    font-family:'Inter', sans-serif;
+    font-weight:500;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .composer button:hover{ background: var(--accent); }
+  .composer button:disabled{ opacity:0.5; cursor:default; }
+
+  .scope-note{
+    margin-top:14px;
+    font-size:12px;
+    color: var(--ink-soft);
+    display:flex;
+    gap:8px;
+    align-items:flex-start;
+  }
+  .scope-note::before{ content:"—"; }
+
+  /* ---------- Dashboard view ---------- */
+  .card-grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 720px){ .card-grid{ grid-template-columns: repeat(2,1fr); } }
+  .metric-card{
+    background: var(--surface);
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+  .metric-card .label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color: var(--ink-soft);
+  }
+  .metric-card .value{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 30px;
+    font-weight:600;
+    margin-top:6px;
+    color: var(--ink);
+  }
+
+  .panel{
+    background: var(--surface);
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px 22px;
+    margin-bottom: 20px;
+  }
+  .panel h2{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:19px;
+    margin: 0 0 4px;
+  }
+  .panel .sub{
+    font-size:12.5px;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+
+  .model-status{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .status-pill{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid #cfe3de;
+  }
+  .status-pill.tfidf{ background: var(--amber-soft); color: var(--amber); border-color:#eddcbb; }
+
+  .cm-tabs{ display:flex; gap:6px; margin-bottom:12px; }
+  .cm-tabs button{
+    border:1px solid var(--line);
+    background:#fff;
+    padding:6px 12px;
+    border-radius:6px;
+    font-size:12.5px;
+    font-family:'Inter';
+    cursor:pointer;
+    color: var(--ink-soft);
+  }
+  .cm-tabs button.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  #cmImage{
+    width:100%;
+    max-width: 640px;
+    display:block;
+    border-radius: 8px;
+    border:1px solid var(--line);
+  }
+  .cm-empty{
+    font-size:13px;
+    color:var(--ink-soft);
+    font-style:italic;
+  }
+
+  table.intent-table{
+    width:100%;
+    border-collapse: collapse;
+    font-size:13px;
+  }
+  table.intent-table th{
+    text-align:left;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color: var(--ink-soft);
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  table.intent-table td{
+    padding: 8px 10px;
+    border-bottom: 1px solid #eef2f1;
+    vertical-align:middle;
+  }
+  table.intent-table td.intent-name{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+  }
+  .bar-cell{ display:flex; align-items:center; gap:8px; }
+  .bar-track{ width:70px; height:6px; background:#e6ece9; border-radius:4px; overflow:hidden; }
+  .bar-fill{ height:100%; background: var(--accent); }
+  .bar-val{ font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink-soft); width:32px; }
+
+  footer{
+    text-align:center;
+    padding: 18px;
+    font-size:11.5px;
+    color: var(--ink-soft);
+    font-family:'IBM Plex Mono', monospace;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-row">
+    <div class="wordmark"><span class="dot"></span>HealthBuddy</div>
+    <div class="tagline">intent classifier · general health info, not diagnosis</div>
+  </div>
+
+  <div class="pulse-strip">
+    <svg viewBox="0 0 600 34" preserveAspectRatio="none">
+      <polyline fill="none" stroke="#2f6f62" stroke-width="1.6"
+        points="0,17 40,17 52,17 58,4 64,30 70,17 110,17 150,17 162,17 168,4 174,30 180,17 220,17
+                300,17 340,17 352,17 358,4 364,30 370,17 410,17 450,17 462,17 468,4 474,30 480,17 520,17
+                600,17 640,17 652,17 658,4 664,30 670,17 710,17 750,17 762,17 768,4 774,30 780,17 820,17
+                900,17 940,17 952,17 958,4 964,30 970,17 1010,17 1050,17 1062,17 1068,4 1074,30 1080,17 1120,17
+                1200,17"/>
+    </svg>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-view="chat">Chat</button>
+    <button class="tab-btn" data-view="dashboard">Dashboard</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- CHAT VIEW -->
+  <section id="view-chat" class="view active">
+    <div class="chat-shell">
+      <div class="messages" id="messages"></div>
+      <div class="chips" id="chips">
+        <button class="chip">what are the symptoms of the flu</button>
+        <button class="chip">i have trouble falling asleep</button>
+        <button class="chip">book me an appointment</button>
+        <button class="chip">i can't breathe</button>
+        <button class="chip">what time do you open</button>
+      </div>
+      <div class="composer">
+        <input type="text" id="msgInput" placeholder="Ask about symptoms, sleep, nutrition, appointments…" autocomplete="off">
+        <button id="sendBtn">Send</button>
+      </div>
+    </div>
+    <p class="scope-note">HealthBuddy provides general health information only. It does not diagnose, and always redirects emergency-sounding messages to real emergency services.</p>
+  </section>
+
+  <!-- DASHBOARD VIEW -->
+  <section id="view-dashboard" class="view">
+    <div class="panel">
+      <h2>Model status</h2>
+      <div class="sub">which classifier is answering chat right now</div>
+      <div class="model-status" id="modelStatus">loading…</div>
+    </div>
+
+    <div class="card-grid" id="metricCards"></div>
+
+    <div class="panel">
+      <h2>Confusion matrix</h2>
+      <div class="sub">held-out test set predictions vs. true intent</div>
+      <div class="cm-tabs" id="cmTabs"></div>
+      <img id="cmImage" src="" alt="Confusion matrix" style="display:none">
+      <div class="cm-empty" id="cmEmpty">No confusion matrix available yet.</div>
+    </div>
+
+    <div class="panel">
+      <h2>Per-intent performance</h2>
+      <div class="sub">precision / recall / f1 on the test split</div>
+      <table class="intent-table" id="intentTable">
+        <thead>
+          <tr><th>Intent</th><th>Precision</th><th>Recall</th><th>F1</th><th>Support</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Training data</h2>
+      <div class="sub">examples per intent in intents.json</div>
+      <table class="intent-table" id="datasetTable">
+        <thead><tr><th>Intent</th><th>Examples</th><th>Sample phrasing</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<footer>HealthBuddy · local demo · not a substitute for professional medical advice</footer>
+
+<script>
+const messagesEl = document.getElementById('messages');
+const msgInput = document.getElementById('msgInput');
+const sendBtn = document.getElementById('sendBtn');
+
+function styleClassFor(intent, source){
+  if(source === 'emergency_keyword' || intent === 'emergency_redirect') return 'emergency';
+  if(source === 'fallback') return 'fallback';
+  if(intent === 'appointment_booking' || intent === 'clinic_hours') return 'admin';
+  return '';
+}
+
+function addMessage(role, text, meta){
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + role;
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  if(role === 'bot' && meta){
+    const cls = styleClassFor(meta.intent, meta.source);
+    if(cls) bubble.classList.add(cls); // guard against empty class (default intents have none)
+  }
+  bubble.textContent = text;
+  row.appendChild(bubble);
+
+  if(role === 'bot' && meta){
+    const vitals = document.createElement('div');
+    vitals.className = 'vitals';
+    const pct = Math.round(meta.confidence * 100);
+    vitals.innerHTML = `<span>${meta.intent}</span><span class="confbar"><span style="width:${pct}%"></span></span><span>${pct}%</span>`;
+    bubble.appendChild(vitals);
+  }
+
+  messagesEl.appendChild(row);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+async function sendMessage(text){
+  if(!text.trim()) return;
+  addMessage('user', text);
+  msgInput.value = '';
+  sendBtn.disabled = true;
+  try{
+    const res = await fetch('/api/chat', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message:text})
+    });
+    if(!res.ok){
+      addMessage('bot', "Sorry, something went wrong on the server side. Please try again.",
+        {intent:'error', confidence:0, source:'fallback'});
+    } else {
+      const data = await res.json();
+      addMessage('bot', data.response, data);
+    }
+  }catch(e){
+    addMessage('bot', "Sorry, I couldn't reach the server just now.",
+      {intent:'debug-fetch-error', confidence:0, source:'fallback'});
+  }
+  sendBtn.disabled = false;
+  msgInput.focus();
+}
+
+sendBtn.addEventListener('click', () => sendMessage(msgInput.value));
+msgInput.addEventListener('keydown', e => { if(e.key === 'Enter') sendMessage(msgInput.value); });
+document.getElementById('chips').addEventListener('click', e => {
+  if(e.target.classList.contains('chip')) sendMessage(e.target.textContent);
+});
+
+addMessage('bot', "Hi! I'm HealthBuddy, your health information assistant. How can I help you today?", {intent:'greeting', confidence:1, source:'model'});
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + btn.dataset.view).classList.add('active');
+    if(btn.dataset.view === 'dashboard') loadDashboard();
+  });
+});
+
+/* ---------- Dashboard ---------- */
+let dashboardLoaded = false;
+let statsCache = null;
+
+async function loadDashboard(){
+  if(dashboardLoaded) return;
+  dashboardLoaded = true;
+  const res = await fetch('/api/stats');
+  statsCache = await res.json();
+
+  const statusEl = document.getElementById('modelStatus');
+  const isSemantic = statsCache.active_model_type === 'semantic';
+  statusEl.innerHTML = `
+    <span class="status-pill ${isSemantic ? '' : 'tfidf'}">${isSemantic ? 'Semantic embeddings' : 'TF-IDF + SVM'}</span>
+    <span style="font-size:13px;color:var(--ink-soft)">
+      ${isSemantic
+        ? 'Using sentence-transformer embeddings for meaning-based matching.'
+        : 'Using keyword-based TF-IDF matching. Run train_model_semantic.py to switch to semantic embeddings.'}
+    </span>`;
+
+  const report = statsCache.active_model_type === 'semantic' ? statsCache.semantic_report : statsCache.tfidf_report;
+  const cards = document.getElementById('metricCards');
+  if(report && report.summary){
+    const s = report.summary;
+    cards.innerHTML = `
+      <div class="metric-card"><div class="label">Accuracy</div><div class="value">${(s.accuracy*100).toFixed(1)}%</div></div>
+      <div class="metric-card"><div class="label">Precision (macro)</div><div class="value">${(s.precision_macro*100).toFixed(1)}%</div></div>
+      <div class="metric-card"><div class="label">Recall (macro)</div><div class="value">${(s.recall_macro*100).toFixed(1)}%</div></div>
+      <div class="metric-card"><div class="label">F1 (macro)</div><div class="value">${(s.f1_macro*100).toFixed(1)}%</div></div>`;
+  } else {
+    cards.innerHTML = `<div class="metric-card"><div class="label">Status</div><div class="value" style="font-size:16px">No report found</div></div>`;
+  }
+
+  // Confusion matrix tabs
+  const cmTabs = document.getElementById('cmTabs');
+  cmTabs.innerHTML = '';
+  const options = [];
+  if(statsCache.tfidf_available) options.push({key:'tfidf', label:'TF-IDF'});
+  if(statsCache.semantic_available) options.push({key:'semantic', label:'Semantic'});
+  options.forEach((opt, i) => {
+    const b = document.createElement('button');
+    b.textContent = opt.label;
+    if((isSemantic && opt.key==='semantic') || (!isSemantic && opt.key==='tfidf') || (i===0 && options.length===1)) b.classList.add('active');
+    b.addEventListener('click', () => {
+      cmTabs.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      showConfusionMatrix(opt.key);
+    });
+    cmTabs.appendChild(b);
+  });
+  if(options.length){
+    const activeOpt = options.find(o => (isSemantic && o.key==='semantic') || (!isSemantic && o.key==='tfidf')) || options[0];
+    showConfusionMatrix(activeOpt.key);
+  } else {
+    document.getElementById('cmEmpty').style.display = 'block';
+  }
+
+  // Per-intent table
+  const tbody = document.querySelector('#intentTable tbody');
+  tbody.innerHTML = '';
+  if(report && report.per_class){
+    report.per_class.forEach(row => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="intent-name">${row.intent}</td>
+        ${['precision','recall','f1'].map(k => `
+          <td><div class="bar-cell">
+            <div class="bar-track"><div class="bar-fill" style="width:${row[k]*100}%"></div></div>
+            <div class="bar-val">${row[k].toFixed(2)}</div>
+          </div></td>`).join('')}
+        <td>${row.support}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Dataset table
+  const intentsRes = await fetch('/api/intents');
+  const intentsData = await intentsRes.json();
+  const dsBody = document.querySelector('#datasetTable tbody');
+  dsBody.innerHTML = '';
+  intentsData.forEach(item => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="intent-name">${item.intent}</td>
+      <td>${item.example_count}</td>
+      <td style="color:var(--ink-soft);font-size:12.5px">${item.sample_examples[0] || ''}</td>`;
+    dsBody.appendChild(tr);
+  });
+}
+
+function showConfusionMatrix(kind){
+  const img = document.getElementById('cmImage');
+  const empty = document.getElementById('cmEmpty');
+  const url = kind === 'semantic' ? statsCache.confusion_matrix_semantic_url : statsCache.confusion_matrix_tfidf_url;
+  img.onerror = () => { img.style.display='none'; empty.style.display='block'; };
+  img.onload = () => { img.style.display='block'; empty.style.display='none'; };
+  img.src = url + '?t=' + Date.now();
+}
+</script>
+
+</body>
+</html>

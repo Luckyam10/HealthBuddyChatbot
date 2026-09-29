@@ -1,0 +1,29 @@
+=== HealthBuddy Semantic Intent Classifier ===
+
+Embedder: all-MiniLM-L6-v2
+Similarity threshold: 0.43
+
+Accuracy : 0.932
+Precision (macro): 0.939
+Recall (macro): 0.936
+F1-score (macro): 0.936
+
+                     precision    recall  f1-score   support
+
+appointment_booking       1.00      1.00      1.00        10
+       bot_identity       1.00      1.00      1.00        10
+       clinic_hours       1.00      1.00      1.00        10
+ emergency_redirect       0.89      0.80      0.84        10
+    exercise_advice       1.00      1.00      1.00         9
+            goodbye       0.79      0.92      0.85        12
+           greeting       0.90      0.75      0.82        12
+ mental_health_info       1.00      1.00      1.00        10
+   nutrition_advice       1.00      1.00      1.00        10
+       sleep_advice       1.00      1.00      1.00        10
+  symptom_info_cold       0.75      0.90      0.82        10
+   symptom_info_flu       0.89      0.80      0.84        10
+             thanks       1.00      1.00      1.00        10
+
+           accuracy                           0.93       133
+          macro avg       0.94      0.94      0.94       133
+       weighted avg       0.94      0.93      0.93       133
