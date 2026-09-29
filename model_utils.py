@@ -2,18 +2,19 @@
 model_utils.py
 --------------
 
-Runtime semantic engine for HealthBuddy.
+Runtime intent engine for HealthBuddy.
 
-Preferred model:
-    model_semantic.joblib
+Preferred runtime model:
+    model.joblib
 
 Fallback:
-    model.joblib
+    model_semantic.joblib
 
 The semantic model uses sentence embeddings and cosine similarity
 against semantic intent references.
 
-This is NOT an if/else classifier for individual user phrases.
+The TF-IDF model is preferred at runtime because it uses significantly
+less memory than Sentence Transformers on limited deployment services.
 
 The only explicit rule is the emergency safety override.
 """
@@ -116,16 +117,10 @@ class IntentPredictor:
             "model.joblib"
         )
 
-        if os.path.exists(semantic_path):
-
-            data = joblib.load(
-                semantic_path
-            )
-
-            return (
-                "semantic",
-                data,
-            )
+        # Prefer the lightweight TF-IDF model at runtime.
+        #
+        # This avoids loading Sentence Transformers on Render,
+        # where available memory may be limited.
 
         if os.path.exists(tfidf_path):
 
@@ -136,6 +131,22 @@ class IntentPredictor:
             return (
                 "tfidf",
                 pipeline,
+            )
+
+        # Keep the semantic model available as a fallback.
+        #
+        # This allows the semantic model to continue being used
+        # locally or on a service with sufficient memory.
+
+        if os.path.exists(semantic_path):
+
+            data = joblib.load(
+                semantic_path
+            )
+
+            return (
+                "semantic",
+                data,
             )
 
         raise FileNotFoundError(
@@ -247,7 +258,7 @@ class IntentPredictor:
         }
 
     # -----------------------------------------------------------------
-    # TF-IDF fallback
+    # TF-IDF prediction
     # -----------------------------------------------------------------
 
     def _tfidf_predict(self, text):
@@ -320,7 +331,7 @@ class IntentPredictor:
             }
 
         # -------------------------------------------------------------
-        # Semantic understanding
+        # Intent prediction
         # -------------------------------------------------------------
 
         if self.model_type == "semantic":
@@ -356,7 +367,7 @@ class IntentPredictor:
             }
 
         # -------------------------------------------------------------
-        # Known semantic meaning
+        # Validate intent
         # -------------------------------------------------------------
 
         if intent not in self.intents:
@@ -368,6 +379,10 @@ class IntentPredictor:
                 "source": "invalid_intent_fallback",
                 "model_type": self.model_type,
             }
+
+        # -------------------------------------------------------------
+        # Generate response
+        # -------------------------------------------------------------
 
         response = random.choice(
             self.intents[
@@ -382,4 +397,3 @@ class IntentPredictor:
             "source": "semantic_model",
             "model_type": self.model_type,
         }
-
