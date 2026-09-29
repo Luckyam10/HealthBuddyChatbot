@@ -148,13 +148,13 @@ def chat():
 
     except Exception as error:
 
-        print(f"Chat prediction error: {error}")
+        import traceback
+        traceback.print_exc()
 
         return jsonify({
             "error": "prediction_failed",
-            "message": "The chatbot encountered an error while processing your message."
+            "message": str(error)
         }), 500
-
 
 # ---------------------------------------------------------------------
 # Intents API
