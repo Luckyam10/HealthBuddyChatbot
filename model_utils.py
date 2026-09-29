@@ -1,3 +1,4 @@
+```python
 """
 model_utils.py
 --------------
@@ -39,10 +40,6 @@ FALLBACK_MESSAGE = (
 
 # ---------------------------------------------------------------------
 # Emergency safety layer
-# ---------------------------------------------------------------------
-# This is deliberately separate from normal semantic classification.
-# Its purpose is to prevent an emergency message from being treated
-# as an ordinary health question.
 # ---------------------------------------------------------------------
 
 EMERGENCY_KEYWORDS = [
@@ -86,6 +83,7 @@ class IntentPredictor:
     # -----------------------------------------------------------------
 
     def _path(self, name):
+
         return os.path.join(
             self.base_dir,
             name,
@@ -152,23 +150,23 @@ class IntentPredictor:
     # Sentence Transformer
     # -----------------------------------------------------------------
 
- def _get_embedder(self):
+    def _get_embedder(self):
 
-    if self._embedder is None:
+        if self._embedder is None:
 
-        from sentence_transformers import SentenceTransformer
+            from sentence_transformers import SentenceTransformer
 
-        embedder_name = self.model.get(
-            "embedder_name",
-            "all-MiniLM-L6-v2",
-        )
+            embedder_name = self.model.get(
+                "embedder_name",
+                "all-MiniLM-L6-v2",
+            )
 
-        self._embedder = SentenceTransformer(
-            embedder_name,
-            device="cpu"
-        )
+            self._embedder = SentenceTransformer(
+                embedder_name,
+                device="cpu",
+            )
 
-    return self._embedder
+        return self._embedder
 
     # -----------------------------------------------------------------
     # Emergency detection
@@ -385,3 +383,4 @@ class IntentPredictor:
             "source": "semantic_model",
             "model_type": self.model_type,
         }
+```
