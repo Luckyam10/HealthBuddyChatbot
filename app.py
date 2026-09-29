@@ -260,7 +260,14 @@ def confusion_matrix_image(kind):
 # ---------------------------------------------------------------------
 # Local development server
 # ---------------------------------------------------------------------
-
+@app.route("/api/health")
+def health():
+    return jsonify({
+        "status": "ok",
+        "message": "Flask backend is running",
+        "model_type": predictor.model_type
+    })
+    
 if __name__ == "__main__":
 
     print(
