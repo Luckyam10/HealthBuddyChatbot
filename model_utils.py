@@ -152,22 +152,23 @@ class IntentPredictor:
     # Sentence Transformer
     # -----------------------------------------------------------------
 
-    def _get_embedder(self):
+ def _get_embedder(self):
 
-        if self._embedder is None:
+    if self._embedder is None:
 
-            from sentence_transformers import SentenceTransformer
+        from sentence_transformers import SentenceTransformer
 
-            embedder_name = self.model.get(
-                "embedder_name",
-                "all-MiniLM-L6-v2",
-            )
+        embedder_name = self.model.get(
+            "embedder_name",
+            "all-MiniLM-L6-v2",
+        )
 
-            self._embedder = SentenceTransformer(
-                embedder_name
-            )
+        self._embedder = SentenceTransformer(
+            embedder_name,
+            device="cpu"
+        )
 
-        return self._embedder
+    return self._embedder
 
     # -----------------------------------------------------------------
     # Emergency detection
